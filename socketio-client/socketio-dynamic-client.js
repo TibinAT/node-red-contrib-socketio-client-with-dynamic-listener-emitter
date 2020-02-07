@@ -61,10 +61,11 @@ module.exports = function(RED) {
 
       node.on('input', function(msg){
         node.socketId = msg.payload.socketId;
+        node.socketId = msg.payload.eventName;
         if(msg.payload.status == 'connected'){
           node.status({fill:'green',shape:'dot',text:'listening'});
           if( !sockets[node.socketId].hasListeners(node.eventName) ){
-            sockets[node.socketId].on(node.eventName, function(data){
+            sockets[node.socketId].on(msg.payload.eventName, function(data){
               node.send( {payload:data} );
             });
           }
@@ -96,16 +97,22 @@ module.exports = function(RED) {
     function SocketIOEmitter(n){
       RED.nodes.createNode(this, n);
       this.name = n.name;
-      this.eventName = n.eventname;
+     /*    this.eventName = n.eventname;*/
       this.socketId = null;
 
       var node = this;
 
       node.on('input', function(msg){
         node.socketId = msg.payload.socketId;
-
-        sockets[node.socketId].emit(n.name, JSON.parse(n.message || '{}') );
-
+        node.eventName = msg.payload.eventName;
+        node.message = msg.payload.message;
+        if(msg.payload.message != null){
+          sockets[node.socketId].emit(node.eventName, JSON.parse(node.message || '{}') );
+        }else if(msg.payload.eventName == null){
+          node.status({fill:'red',shape:'ring',text:'event null'});    
+        }else if(msg.payload.message == null){
+          node.status({fill:'red',shape:'ring',text:'message null'});    
+        }
       });
     }
     RED.nodes.registerType('socketio-emitter', SocketIOEmitter);
