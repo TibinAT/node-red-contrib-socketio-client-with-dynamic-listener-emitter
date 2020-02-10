@@ -61,7 +61,7 @@ module.exports = function(RED) {
 
       node.on('input', function(msg){
         node.socketId = msg.payload.socketId;
-        node.socketId = msg.payload.eventName;
+        node.eventName = msg.payload.eventName;
         if(msg.payload.status == 'connected'){
           node.status({fill:'green',shape:'dot',text:'listening'});
           if( !sockets[node.socketId].hasListeners(node.eventName) ){
